@@ -1,0 +1,187 @@
+body {
+  font-family: monospace;
+  background: #000;
+  color: #00FF00;
+  padding: 2rem;
+  min-height: 100vh;
+}
+.container {
+  max-width: 800px;
+  margin: 40px auto;
+  background: #000;
+  border-radius: 0.5em;
+  box-shadow: 0 2px 12px #000a;
+  padding: 2rem 2.5rem 2.5rem 2.5rem;
+  border: 2px solid #00FF00;
+}
+h1 {
+  text-align: left;
+  color: #00FF00;
+  margin-bottom: 1.5rem;
+}
+
+.warning {
+  color: #ffff00;
+  margin: 10px 0;
+  padding: 5px;
+  border-left: 3px solid #ffff00;
+}
+
+.error {
+  color: #ff0000;
+  margin: 10px 0;
+  padding: 5px;
+  border-left: 3px solid #ff0000;
+}
+
+.tech-info {
+  color: #00ffff;
+  margin: 5px 0;
+  padding: 3px 0;
+}
+
+.tech-section {
+  color: #00ff00;
+  margin: 10px 0 5px 0;
+  font-weight: bold;
+}
+
+.tech-detail {
+  color: #00ffff;
+  margin: 3px 0 3px 20px;
+  font-size: 0.9em;
+}
+
+.enum-section {
+  color: #00ff00;
+  margin: 15px 0 5px 0;
+  font-weight: bold;
+}
+
+.enum-list {
+  list-style: none;
+  padding-left: 20px;
+  margin: 5px 0;
+}
+
+.enum-item {
+  color: #00ffff;
+  margin: 3px 0;
+  font-family: 'Fira Mono', monospace;
+}
+
+.enum-item a {
+  color: #00ffff;
+  text-decoration: none;
+}
+
+.enum-item a:hover {
+  text-decoration: underline;
+}
+
+.enum-item.forbidden {
+  color: #ff6666;
+}
+
+.enum-item .status-code {
+  color: #ffff00;
+  margin-right: 10px;
+}
+
+.enum-item .content-type {
+  color: #888888;
+  font-size: 0.8em;
+  margin-left: 10px;
+  font-weight: bold;
+  font-size: 1.6rem;
+  letter-spacing: 1px;
+  border-bottom: 1px dashed #00FF00;
+  padding-bottom: 0.5rem;
+}
+.input-group {
+  display: flex;
+  margin-bottom: 1.5rem;
+}
+input[type="text"] {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  font-size: 1.1rem;
+  background: #000;
+  color: #00FF00;
+  border: 1px solid #00FF00;
+  border-radius: 0.3em 0 0 0.3em;
+  outline: none;
+  font-family: monospace;
+}
+input[type="text"]:focus {
+  border-color: #00FF00;
+  background: #000;
+}
+button {
+  padding: 0.7rem 1.5rem;
+  font-size: 1.1rem;
+  background: #000;
+  color: #00FF00;
+  border: 1px solid #00FF00;
+  border-radius: 0 0.3em 0.3em 0;
+  cursor: pointer;
+  font-family: monospace;
+  font-weight: bold;
+  transition: background 0.2s, color 0.2s;
+}
+button:hover {
+  background: #00FF00;
+  color: #000;
+}
+h2 {
+  color: #00FF00;
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #00FF00;
+  padding-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+.result-box {
+  background: #000;
+  border-radius: 0.3em;
+  padding: 1.2rem;
+  margin-top: 1rem;
+  min-height: 60px;
+  font-size: 1.05rem;
+  color: #00FF00;
+  box-shadow: 0 1px 4px #0005;
+  word-break: break-word;
+  border: 1px solid #00FF00;
+}
+.result-box, .result-box * {
+  color: #00FF00 !important;
+  background: transparent !important;
+  border-color: #00FF00 !important;
+}
+.loading {
+  color: #FFFF00;
+  font-weight: bold;
+}
+.error {
+  color: #FF5555;
+  font-weight: bold;
+}
+ul { margin: 0.5em 0 0.5em 1.5em; }
+li { margin-bottom: 0.7em; }
+pre {
+  background: #000;
+  color: #00FF00;
+  border-radius: 0.3em;
+  padding: 0.7em 1em;
+  font-size: 1em;
+  margin: 0.5em 0;
+  box-shadow: none;
+  border: 1px dashed #00FF00;
+  overflow-x: auto;
+}
+@media (max-width: 800px) {
+  .container { padding: 1rem; }
+  .input-group { flex-direction: column; }
+  input[type="text"], button { border-radius: 0.3em; margin-bottom: 0.5rem; }
+  button { width: 100%; }
+}

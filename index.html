@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Host & Network Insight</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <h1>$ Host & Network Insight</h1>
+    <div class="input-group">
+      <input id="domain" type="text" placeholder="Enter domain (e.g. tryhackme.com)" />
+      <button onclick="fetchInfo()">Check</button>
+    </div>
+    <h2>Results</h2>
+    <div id="output" class="result-box">Awaiting input...</div>
+  </div>
+  <script>
+    function formatGeo(geo) {
+      if (!geo) return '';
+      let out = '';
+      if (geo.city) out += `<b>City:</b> <span>${geo.city}</span><br/>`;
+      if (geo.region) out += `<b>Region:</b> <span>${geo.region}</span><br/>`;
+      if (geo.country) out += `<b>Country:</b> <span>${geo.country}</span><br/>`;
+      return out;
+    }
+    function formatResult(data) {
+      if (data.error) return `<span class='error'>❌ ${data.error}</span>`;
+      let html = '';
+      html += `<b>Domain:</b> <span>${data.domain || ''}</span><br/>`;
+      if (data.cdn_org) html += `<b>CDN/Proxy:</b> <span>${data.cdn_org}</span><br/>`;
+      if (data.hosting_provider) html += `<b>Hosting Provider:</b> <span>${data.hosting_provider}</span><br/>`;
+      if (data.main_ip) html += `<b>Main IP:</b> <span>${data.main_ip}</span><br/>`;
+      if (data.main_ip_info) {
+        if (data.main_ip_info.geo) html += formatGeo(data.main_ip_info.geo);
+        html += `<b>Main IP Info:</b><br/><pre>${JSON.stringify(data.main_ip_info, null, 2)}</pre>`;
+      }
+      if (data.dns_history && data.dns_history.ips && data.dns_history.ips.length) {
+        html += `<b>Historical IPs:</b> <pre>${JSON.stringify(data.dns_history.ips, null, 2)}</pre>`;
+      }
+
+      // Port Scan Results
+      if (data.portscan && data.portscan.results) {
+        html += `<b>Port Scan Results:</b><br/>`;
+        html += `<pre>${JSON.stringify(data.portscan.results, null, 2)}</pre>`;
+      }
+
+      // Technology Detection Results
+      if (data.technology_scan) {
+        html += `<b>Technology Detection Results:</b><br/>`;
+        
+        // Server Information
+        if (data.technology_scan.server_info) {
+            html += `<div class="tech-section">Server Information:</div>`;
+            if (data.technology_scan.server_info.server) {
+                html += `<div class="tech-info">Server: ${data.technology_scan.server_info.server}</div>`;
+            }
+            if (data.technology_scan.server_info.server_version) {
+                html += `<div class="tech-info">Version: ${data.technology_scan.server_info.server_version}</div>`;
+            }
+            if (data.technology_scan.server_info.operating_system) {
+                html += `<div class="tech-info">Operating System: ${data.technology_scan.server_info.operating_system}</div>`;
+            }
+        }
+        
+        // Web Application Firewall (WAF)
+        if (data.technology_scan.waf && data.technology_scan.waf.length > 0) {
+            html += `<div class="tech-section">Web Application Firewall:</div>`;
+            data.technology_scan.waf.forEach(waf => {
+                html += `<div class="tech-info">${waf}</div>`;
+            });
+        }
+        
+        // Frameworks
+        if (data.technology_scan.frameworks && data.technology_scan.frameworks.length > 0) {
+            html += `<div class="tech-section">Web Frameworks:</div>`;
+            data.technology_scan.frameworks.forEach(framework => {
+                html += `<div class="tech-info">${framework}</div>`;
+            });
+        }
+        
+        // Programming Languages
+        if (data.technology_scan.languages && data.technology_scan.languages.length > 0) {
+            html += `<div class="tech-section">Programming Languages:</div>`;
+            data.technology_scan.languages.forEach(lang => {
+                html += `<div class="tech-info">${lang}</div>`;
+            });
+        }
+        
+        // CMS
+        if (data.technology_scan.cms) {
+            html += `<div class="tech-section">Content Management System:</div>`;
+            html += `<div class="tech-info">${data.technology_scan.cms}</div>`;
+        }
+
+        // Technologies 
+        if (data.technology_scan.technologies && data.technology_scan.technologies.length > 0) {
+            html += `<div class="tech-section">Technologies:</div>`;
+            data.technology_scan.technologies.forEach(tech => {
+                html += `<div class="tech-info">${tech}</div>`;
+            });
+        }
+
+        // JavaScript Libraries
+        if (data.technology_scan.javascript_libs && data.technology_scan.javascript_libs.length > 0) {
+            html += `<div class="tech-section">JavaScript Libraries:</div>`;
+            html += `<div class="tech-info">${data.technology_scan.javascript_libs.join(', ')}</div>`;
+        }
+
+        // Security Headers
+        if (data.technology_scan.security_headers && Object.keys(data.technology_scan.security_headers).length > 0) {
+            html += `<div class="tech-section">Security Headers:</div>`;
+            for (const [header, value] of Object.entries(data.technology_scan.security_headers)) {
+                html += `<div class="tech-detail">${header}: ${value}</div>`;
+            }
+        }
+
+        // SSL Information
+        if (data.technology_scan.ssl_info && Object.keys(data.technology_scan.ssl_info).length > 0) {
+            html += `<div class="tech-section">SSL Information:</div>`;
+            html += `<pre>${JSON.stringify(data.technology_scan.ssl_info, null, 2)}</pre>`;
+        }
+
+        // Errors
+        if (data.technology_scan.errors && data.technology_scan.errors.length > 0) {
+            html += `<div class="error">Technology Detection Errors:</div>`;
+            html += `<ul>`;
+            for (const error of data.technology_scan.errors) {
+                html += `<li>${error}</li>`;
+            }
+            html += `</ul>`;
+        }
+      }
+
+      // Add Directory Enumeration Results
+      if (data.directory_scan) {
+        html += `<b>Directory Enumeration Results:</b><br/>`;
+        
+        if (data.directory_scan.accessible_dirs && data.directory_scan.accessible_dirs.length > 0) {
+            html += `<div class="enum-section">Found Directories:</div>`;
+            html += `<ul class="enum-list">`;
+            for (const dir of data.directory_scan.accessible_dirs) {
+                html += `<li class="enum-item ${dir.status_code === 403 ? 'forbidden' : ''}">
+                    <span class="status-code">[${dir.status_code}]</span> 
+                    <a href="${dir.url}" target="_blank">${dir.url}</a>
+                    <span class="content-type">${dir.content_type || ''}</span>
+                </li>`;
+            }
+            html += `</ul>`;
+        }
+        
+        if (data.directory_scan.accessible_files && data.directory_scan.accessible_files.length > 0) {
+            html += `<div class="enum-section">Found Files:</div>`;
+            html += `<ul class="enum-list">`;
+            for (const file of data.directory_scan.accessible_files) {
+                html += `<li class="enum-item ${file.status_code === 403 ? 'forbidden' : ''}">
+                    <span class="status-code">[${file.status_code}]</span> 
+                    <a href="${file.url}" target="_blank">${file.url}</a>
+                    <span class="content-type">${file.content_type || ''}</span>
+                </li>`;
+            }
+            html += `</ul>`;
+        }
+        
+        if (data.directory_scan.errors && data.directory_scan.errors.length > 0) {
+            html += `<div class="error">Directory Scan Errors:</div>`;
+            html += `<ul>`;
+            for (const error of data.directory_scan.errors) {
+                html += `<li>${error}</li>`;
+            }
+            html += `</ul>`;
+        }
+      }
+
+      if (data.technology_scan) {
+        html += `<b>Technology Detection Results:</b><br/>`;
+        
+        // Server Information
+        if (data.technology_scan.server_info) {
+            html += `<div class="tech-section">Server Information:</div>`;
+            if (data.technology_scan.server_info.server) {
+                html += `<div class="tech-info">Server: ${data.technology_scan.server_info.server}</div>`;
+            }
+            if (data.technology_scan.server_info.server_version) {
+                html += `<div class="tech-info">Version: ${data.technology_scan.server_info.server_version}</div>`;
+            }
+            if (data.technology_scan.server_info.operating_system) {
+                html += `<div class="tech-info">Operating System: ${data.technology_scan.server_info.operating_system}</div>`;
+            }
+        }
+        
+        // Web Application Firewall (WAF)
+        if (data.technology_scan.waf && data.technology_scan.waf.length > 0) {
+            html += `<div class="tech-section">Web Application Firewall:</div>`;
+            data.technology_scan.waf.forEach(waf => {
+                html += `<div class="tech-info">${waf}</div>`;
+            });
+        }
+        
+        // Frameworks
+        if (data.technology_scan.frameworks && data.technology_scan.frameworks.length > 0) {
+            html += `<div class="tech-section">Web Frameworks:</div>`;
+            data.technology_scan.frameworks.forEach(framework => {
+                html += `<div class="tech-info">${framework}</div>`;
+            });
+        }
+        
+        // Programming Languages
+        if (data.technology_scan.languages && data.technology_scan.languages.length > 0) {
+            html += `<div class="tech-section">Programming Languages:</div>`;
+            data.technology_scan.languages.forEach(lang => {
+                html += `<div class="tech-info">${lang}</div>`;
+            });
+        }
+        
+        // CMS
+        if (data.technology_scan.cms) {
+            html += `<div class="tech-section">Content Management System:</div>`;
+            html += `<div class="tech-info">${data.technology_scan.cms}</div>`;
+        }
+        
+        // Technologies
+        if (data.technology_scan.technologies && data.technology_scan.technologies.length > 0) {
+            html += `<div class="tech-section">Technologies:</div>`;
+            data.technology_scan.technologies.forEach(tech => {
+                html += `<div class="tech-info">${tech}</div>`;
+            });
+        }
+
+        // JavaScript Libraries
+        if (data.technology_scan.javascript_libs && data.technology_scan.javascript_libs.length > 0) {
+            html += `<div class="tech-section">JavaScript Libraries:</div>`;
+            html += `<div class="tech-info">${data.technology_scan.javascript_libs.join(', ')}</div>`;
+        }
+
+        // Security Headers
+        if (data.technology_scan.security_headers && Object.keys(data.technology_scan.security_headers).length > 0) {
+            html += `<div class="tech-section">Security Headers:</div>`;
+            for (const [header, value] of Object.entries(data.technology_scan.security_headers)) {
+                html += `<div class="tech-detail">${header}: ${value}</div>`;
+            }
+        }
+
+        // SSL Information
+        if (data.technology_scan.ssl_info && Object.keys(data.technology_scan.ssl_info).length > 0) {
+            html += `<div class="tech-section">SSL Information:</div>`;
+            html += `<pre>${JSON.stringify(data.technology_scan.ssl_info, null, 2)}</pre>`;
+        }
+
+        // Errors
+        if (data.technology_scan.errors && data.technology_scan.errors.length > 0) {
+            html += `<div class="error">Technology Detection Errors:</div>`;
+            html += `<ul>`;
+            for (const error of data.technology_scan.errors) {
+                html += `<li>${error}</li>`;
+            }
+            html += `</ul>`;
+        }
+      }
+      
+      // Add XSS Scan Results
+      if (data.xss_scan) {
+        html += `<b>XSS Scan Results:</b><br/>`;
+        if (data.xss_scan.vulnerable_params && data.xss_scan.vulnerable_params.length > 0) {
+          html += `<div class="warning">⚠️ Vulnerable URL Parameters Found:</div>`;
+          html += `<ul>`;
+          for (const param of data.xss_scan.vulnerable_params) {
+            html += `<li>Parameter: ${param}</li>`;
+          }
+          html += `</ul>`;
+        }
+        if (data.xss_scan.vulnerable_forms && data.xss_scan.vulnerable_forms.length > 0) {
+          html += `<div class="warning">⚠️ Vulnerable Forms Found:</div>`;
+          html += `<ul>`;
+          for (const form of data.xss_scan.vulnerable_forms) {
+            html += `<li>Form: ${form.action} (Method: ${form.method})<br/>`;
+            html += `Fields: ${form.inputs.join(', ')}</li>`;
+          }
+          html += `</ul>`;
+        }
+        if (data.xss_scan.errors && data.xss_scan.errors.length > 0) {
+          html += `<div class="error">Scan Errors:</div>`;
+          html += `<ul>`;
+          for (const error of data.xss_scan.errors) {
+            html += `<li>${error}</li>`;
+          }
+          html += `</ul>`;
+        }
+      }
+
+      if (data.subdomains && data.subdomains.length) {
+        html += `<b>Subdomains:</b><ul>`;
+        for (const sub of data.subdomains) {
+          html += `<li><b>${sub.subdomain}</b> <span>(${sub.ip})</span><br/>`;
+          if (sub.info && sub.info.geo) html += formatGeo(sub.info.geo);
+          if (sub.cdn_org) html += `&nbsp;&nbsp;<b>CDN:</b> <span>${sub.cdn_org}</span><br/>`;
+          if (sub.hosting_provider) html += `&nbsp;&nbsp;<b>Hosting:</b> <span>${sub.hosting_provider}</span><br/>`;
+          // Remove 'tor' from sub.info before displaying
+          if (sub.info && 'tor' in sub.info) {
+            delete sub.info.tor;
+          }
+          html += `<pre>${JSON.stringify(sub.info, null, 2)}</pre></li>`;
+        }
+        html += `</ul>`;
+      }
+      return html;
+    }
+    async function fetchInfo() {
+      const domain = document.getElementById("domain").value.trim();
+      const output = document.getElementById("output");
+      if (!domain) {
+        output.innerHTML = "<span class='error'>Please enter a domain.</span>";
+        return;
+      }
+      output.innerHTML = "<span class='loading'>[scanning...]</span>";
+      try {
+        const res = await fetch(`/scan?domain=${encodeURIComponent(domain)}`);
+        const data = await res.json();
+        output.innerHTML = formatResult(data);
+      } catch (e) {
+        output.innerHTML = `<span class='error'>❌ Error: ${e.message}</span>`;
+      }
+    }
+  </script>
+</body>
+</html>
